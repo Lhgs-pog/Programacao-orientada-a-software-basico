@@ -1,0 +1,46 @@
+services:
+  app-bi:
+    build: .
+    container_name: dashboard-bi-php
+    ports:
+      # Abre container para a porta 8080 no host
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: dashboard_bi
+      MYSQL_USER: bi_user
+      MYSQL_PASSWORD: bi_password
+    ports:
+      - "3306:3306"
+    volumes:
+      # Persiste os dados do banco na sua máquina host
+      - db_data:/var/lib/mysql
+      # Opcional: Se você salvar o script SQL abaixo como "init.sql" na mesma pasta, 
+      # o Docker o executará automaticamente na primeira vez que subir o banco.
+      # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-gui
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    depends_on:
+      - db
+
+volumes:
+  db_data:
